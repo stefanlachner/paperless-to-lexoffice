@@ -27,4 +27,4 @@ This tool is still in a very early development stage and has been used for my ow
 So feedback is welcome!
 
 ## Special thanks
-Thans to the developers of paperless-ngx in the first plays. You did and are doing a great job making it so easy to develop simple tools like this to interact with paperless-ngx!
+Thans to the developers of paperless-ngx in the first place. You did and are doing a great job making it so easy to develop simple tools like this to interact with paperless-ngx!
