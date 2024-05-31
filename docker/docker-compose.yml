@@ -1,0 +1,7 @@
+version: '3'
+services:
+  daemon:
+    image: paperless-to-lexoffice
+    container_name: paperless-to-lexoffice
+    env_file:
+      - docker-compose.env
