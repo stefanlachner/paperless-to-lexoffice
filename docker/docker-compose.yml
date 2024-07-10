@@ -5,4 +5,4 @@ services:
     container_name: paperless-to-lexoffice
     env_file:
       - docker-compose.env
-    restart: always
+    restart: unless-stopped
