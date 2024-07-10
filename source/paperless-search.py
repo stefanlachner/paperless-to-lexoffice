@@ -50,29 +50,35 @@ async def sync_paperless_to_lexoffice():
         #document_ids = paperless.search_documents(paperless_token, paperless_url, search_string)
         document_ids = paperless.filter_documents_by_tags(paperless_token, paperless_url, [inbox_tag_id, lexoffice_tag_id])
 
-        # Download PDFs into temp folder
+        # None type if error occurred (e.g., paperless-ngx not reachable)
+        if document_ids is not None:
 
-        for id in document_ids:
-            file_content = paperless.download_document(paperless_token, paperless_url, id)
-            filepath = os.path.join(tmp_dir, f"{id}.pdf")
+            # Download PDFs into temp folder
 
-            with open(filepath, "wb") as file:
-                file.write(file_content)
+            for id in document_ids:
+                file_content = paperless.download_document(paperless_token, paperless_url, id)
+                filepath = os.path.join(tmp_dir, f"{id}.pdf")
 
-            # Upload PDF to lexoffice
-            response = lexoffice.upload_voucher(lexoffice_token, lexoffice_url, filepath)
+                with open(filepath, "wb") as file:
+                    file.write(file_content)
 
-            # Upload successful
-            if response.status_code == 202:
-                print("Upload successful. Deleting file from tmp...")
-                os.remove(filepath)
-                #paperless.set_custom_field(paperless_token, paperless_url, id, 6, 1)
-                paperless.remove_tag(paperless_token, paperless_url, id, [1])
+                # Upload PDF to lexoffice
+                response = lexoffice.upload_voucher(lexoffice_token, lexoffice_url, filepath)
 
-            # Upload failed    
-            else:
-                print(f"Upload not successful. Leave file in tmp. HTTP error {response.status_code}")
+                # Upload successful
+                if response.status_code == 202:
+                    print("Upload successful. Deleting file from tmp...")
+                    os.remove(filepath)
+                    #paperless.set_custom_field(paperless_token, paperless_url, id, 6, 1)
+                    paperless.remove_tag(paperless_token, paperless_url, id, [1])
 
+                # Upload failed    
+                else:
+                    print(f"Upload not successful. Leave file in tmp. HTTP error {response.status_code}")
+        
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
     finally:
         # Ensure the lock file is removed even if an error occurs
