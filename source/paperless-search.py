@@ -70,7 +70,7 @@ async def sync_paperless_to_lexoffice():
                     print("Upload successful. Deleting file from tmp...")
                     os.remove(filepath)
                     #paperless.set_custom_field(paperless_token, paperless_url, id, 6, 1)
-                    paperless.remove_tag(paperless_token, paperless_url, id, [1])
+                    paperless.remove_tag(paperless_token, paperless_url, id, [lexoffice_tag_id])
 
                 # Upload failed    
                 else:
