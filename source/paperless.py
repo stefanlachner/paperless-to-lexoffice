@@ -130,7 +130,7 @@ def remove_tag(access_token, base_url, document_id, tag_ids):
             
             # Remove tags
             for tag_id in tag_ids:
-                current_tags.remove(tag_id)
+                current_tags.remove(int(tag_id))
 
             new_tags = current_tags
 
