@@ -1,4 +1,5 @@
 import requests
+import re
 import json
 
 def search_documents(access_token, base_url, search_string):
@@ -60,8 +61,7 @@ def filter_documents_by_tags(access_token, base_url, tags:list):
 
 def download_document(access_token, base_url, id):
     url = f'{base_url}/api/documents/{id}/download/?original=true'
-   
-
+    
     headers = {
         "Authorization": f"Token {access_token}",
         "Accept": "application/json",
@@ -69,19 +69,29 @@ def download_document(access_token, base_url, id):
 
     try:
         response = requests.get(url, headers=headers, stream=True)
-        document_binary = b''
         if response.status_code == 200:
+            # Extrahiere den Dateinamen aus dem Content-Disposition-Header
+            content_disposition = response.headers.get('Content-Disposition', '')
+            filename = "document.pdf"  # Fallback-Name, falls der Header nicht gesetzt ist
+            match = re.search(r'filename="([^"]+)"', content_disposition)
+            if match:
+                filename = match.group(1)
+
+            # Speichere den Inhalt in einer Datei mit dem extrahierten Dateinamen
+            with open(filename, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:  # Überspringt leere Chunks
+                        f.write(chunk)
             
-            for chunk in response.iter_content(chunk_size=8192):
-                    document_binary+=chunk
-                
-            print(f"Document #{id} downloaded successfully.")
-            return document_binary
+            print(f"Document #{id} downloaded successfully as {filename}.")
+            return filename
         else:
             print(f"Failed to download document. Status code: {response.status_code}")
+            return None
 
     except Exception as e:
         print(f"Error connecting to paperless-ngx, is it running? Error: {e}")
+        return None
 
 def set_custom_field(access_token, base_url, document_id, field_id, field_value):
     url = f'{base_url}/api/documents/{document_id}/'

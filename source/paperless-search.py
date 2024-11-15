@@ -44,7 +44,7 @@ async def sync_paperless_to_lexoffice():
     # Create the lock file
     create_lock()
 
-    try:
+    try:  
         print("Check for new documents in paperless-ngx tagged for upload...")
         #document_ids = paperless.search_documents(paperless_token, paperless_url, search_string)
         document_ids = paperless.filter_documents_by_tags(paperless_token, paperless_url, [inbox_tag_id, lexoffice_tag_id])
