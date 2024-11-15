@@ -59,7 +59,7 @@ def filter_documents_by_tags(access_token, base_url, tags:list):
 
 
 def download_document(access_token, base_url, id):
-    url = f'{base_url}/api/documents/{id}/download/'
+    url = f'{base_url}/api/documents/{id}/download/?original=true'
    
 
     headers = {
