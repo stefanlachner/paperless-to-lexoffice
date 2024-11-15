@@ -55,8 +55,8 @@ async def sync_paperless_to_lexoffice():
             # Download PDFs into temp folder
 
             for id in document_ids:
-                file_content = paperless.download_document(paperless_token, paperless_url, id)
-                filepath = os.path.join(tmp_dir, f"{id}.pdf")
+                file_content, filename = paperless.download_document(paperless_token, paperless_url, id)
+                filepath = os.path.join(tmp_dir, filename)
 
                 with open(filepath, "wb") as file:
                     file.write(file_content)

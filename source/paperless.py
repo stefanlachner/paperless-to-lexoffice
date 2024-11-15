@@ -69,30 +69,33 @@ def download_document(access_token, base_url, id):
 
     try:
         response = requests.get(url, headers=headers, stream=True)
+        document_binary = b''
+        filename = "document.pdf"  # Fallback-Name
+
         if response.status_code == 200:
             # Extrahiere den Dateinamen aus dem Content-Disposition-Header
             content_disposition = response.headers.get('Content-Disposition', '')
-            filename = "document.pdf"  # Fallback-Name, falls der Header nicht gesetzt ist
-            match = re.search(r'filename="b\'(.+?)\'"', content_disposition)
-            if match:
-                # Extrahiere den Dateinamen
-                filename = match.group(1)
-
-            # Speichere den Inhalt in einer Datei mit dem extrahierten Dateinamen
-            with open(filename, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:  # Überspringt leere Chunks
-                        f.write(chunk)
             
-            print(f"Document #{id} downloaded successfully as {filename}.")
-            return filename
+            # Regex sucht nach filename="b'...'"
+            match = re.search(r'filename="b\'([^\']+)\'"', content_disposition)
+            if match:
+                # Extrahiere und bereinige den Dateinamen
+                filename = re.sub(r'[^\w\-.]', '_', match.group(1).strip())
+
+            # Sammle den Binärinhalt
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:  # Überspringt leere Chunks
+                    document_binary += chunk
+
+            print(f"Document #{id} downloaded successfully with filename: {filename}.")
+            return document_binary, filename
         else:
             print(f"Failed to download document. Status code: {response.status_code}")
-            return None
+            return None, None
 
     except Exception as e:
         print(f"Error connecting to paperless-ngx, is it running? Error: {e}")
-        return None
+        return None, None
 
 def set_custom_field(access_token, base_url, document_id, field_id, field_value):
     url = f'{base_url}/api/documents/{document_id}/'
