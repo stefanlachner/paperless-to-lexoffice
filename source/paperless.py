@@ -73,8 +73,9 @@ def download_document(access_token, base_url, id):
             # Extrahiere den Dateinamen aus dem Content-Disposition-Header
             content_disposition = response.headers.get('Content-Disposition', '')
             filename = "document.pdf"  # Fallback-Name, falls der Header nicht gesetzt ist
-            match = re.search(r'filename="([^"]+)"', content_disposition)
+            match = re.search(r'filename="b\'(.+?)\'"', content_disposition)
             if match:
+                # Extrahiere den Dateinamen
                 filename = match.group(1)
 
             # Speichere den Inhalt in einer Datei mit dem extrahierten Dateinamen
