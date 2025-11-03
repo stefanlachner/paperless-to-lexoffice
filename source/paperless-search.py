@@ -90,7 +90,7 @@ async def periodic_main(interval_seconds):
         await asyncio.sleep(interval_seconds)
 
 def main():
-    
+    os.makedirs(tmp_dir, exist_ok=True)
     asyncio.run(periodic_main(polling_interval))
 
 
