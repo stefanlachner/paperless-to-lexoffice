@@ -15,9 +15,9 @@ def search_documents(access_token, base_url, search_string):
     
     
         if response.status_code == 200:
-            
+
             search_data = response.json()
-            document_ids = search_data.get('all', [])
+            document_ids = [doc['id'] for doc in search_data.get('results', [])]
             print(f"Search Results: {document_ids}")
 
             return document_ids
@@ -28,7 +28,7 @@ def search_documents(access_token, base_url, search_string):
     except Exception as e:
         print(f"Error connecting to paperless-ngx, is it running? Error: {e}")
 
-    
+
 
 def filter_documents_by_tags(access_token, base_url, tags:list):
     tags_string= ",".join(str(tag) for tag in tags)
@@ -45,9 +45,9 @@ def filter_documents_by_tags(access_token, base_url, tags:list):
     
     
         if response.status_code == 200:
-            
+
             search_data = response.json()
-            document_ids = search_data.get('all', [])
+            document_ids = [doc['id'] for doc in search_data.get('results', [])]
             print(f"Search Results: {document_ids}")
 
             return document_ids
