@@ -40,6 +40,12 @@ class DocumentSearchTests(unittest.TestCase):
         self.assertEqual(get.call_args_list[0].kwargs["params"], {"tags__id__all": "1,2"})
 
     @patch("paperless.requests.get")
+    def test_proxy_http_next_keeps_https(self, get):
+        get.side_effect = [self.response([1], "http://paperless.example/api/documents/?page=2"), self.response([2])]
+        self.assertEqual(paperless.search_documents("test-token", "https://paperless.example", "invoice"), [1, 2])
+        self.assertEqual(get.call_args_list[1].args[0], "https://paperless.example/api/documents/?page=2")
+
+    @patch("paperless.requests.get")
     def test_empty_results(self, get):
         get.return_value = self.response([])
         self.assertEqual(paperless.search_documents("test-token", "https://paperless.example", "missing"), [])

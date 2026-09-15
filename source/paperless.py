@@ -16,6 +16,11 @@ def _get_document_ids(access_token, base_url, params):
 
     while url:
         target = urlsplit(url)
+        # A reverse proxy can leave HTTP URLs in an HTTPS response.
+        # Keep TLS when the next page has the same host and port.
+        if origin.scheme == "https" and target.scheme == "http" and target.netloc == origin.netloc:
+            url = target._replace(scheme="https").geturl()
+            target = urlsplit(url)
         if (target.scheme, target.netloc) != (origin.scheme, origin.netloc):
             raise ValueError("The next page has a different origin.")
         if url in visited:
