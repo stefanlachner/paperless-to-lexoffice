@@ -1,61 +1,77 @@
 import requests
 import json
+from urllib.parse import urljoin, urlsplit
+
+
+def _get_document_ids(access_token, base_url, params):
+    """Read all document pages before returning IDs."""
+    url = f"{base_url.rstrip('/')}/api/documents/"
+    origin = urlsplit(url)
+    headers = {
+        "Authorization": f"Token {access_token}",
+        "Accept": "application/json",
+    }
+    document_ids = []
+    visited = set()
+
+    while url:
+        target = urlsplit(url)
+        # A reverse proxy can leave HTTP URLs in an HTTPS response.
+        # Keep TLS when the next page has the same host and port.
+        if origin.scheme == "https" and target.scheme == "http" and target.netloc == origin.netloc:
+            url = target._replace(scheme="https").geturl()
+            target = urlsplit(url)
+        if (target.scheme, target.netloc) != (origin.scheme, origin.netloc):
+            raise ValueError("The next page has a different origin.")
+        if url in visited:
+            raise ValueError("The document API repeated a page URL.")
+        visited.add(url)
+
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        page = response.json()
+        # A missing results field is an error, not an empty document list.
+        results = page["results"]
+        if not isinstance(results, list):
+            raise ValueError("The document API results must be a list.")
+        for document in results:
+            document_id = document["id"]
+            if type(document_id) is not int:
+                raise ValueError("The document ID must be an integer.")
+            document_ids.append(document_id)
+
+        next_page = page["next"]
+        if next_page is not None and not isinstance(next_page, str):
+            raise ValueError("The next page must be a URL or null.")
+        url = urljoin(response.url, next_page) if next_page else None
+        params = None
+
+    # Do not upload the same ID twice if pages overlap.
+    return list(dict.fromkeys(document_ids))
+
 
 def search_documents(access_token, base_url, search_string):
-     
-    url = f"{base_url}/api/documents/?query=({search_string})"
-
-    headers = {
-        "Authorization": f"Token {access_token}",
-        "Accept": "application/json",
-    }
-
     try:
-        response = requests.get(url, headers=headers)
-    
-    
-        if response.status_code == 200:
-
-            search_data = response.json()
-            document_ids = [doc['id'] for doc in search_data.get('results', [])]
-            print(f"Search Results: {document_ids}")
-
-            return document_ids
-
-        else:
-            print(f"Search was raising HTTP error: {response.status_code}")
-
+        document_ids = _get_document_ids(
+            access_token, base_url, {"query": f"({search_string})"}
+        )
+        print(f"Search Results: {document_ids}")
+        return document_ids
     except Exception as e:
-        print(f"Error connecting to paperless-ngx, is it running? Error: {e}")
+        print(f"Error retrieving Paperless documents: {e}")
 
 
-
-def filter_documents_by_tags(access_token, base_url, tags:list):
-    tags_string= ",".join(str(tag) for tag in tags)
-    
-    url = f"{base_url}/api/documents/?tags__id__all={tags_string}"
-
-    headers = {
-        "Authorization": f"Token {access_token}",
-        "Accept": "application/json",
-    }
- 
+def filter_documents_by_tags(access_token, base_url, tags: list):
     try:
-        response = requests.get(url, headers=headers)
-    
-    
-        if response.status_code == 200:
-
-            search_data = response.json()
-            document_ids = [doc['id'] for doc in search_data.get('results', [])]
-            print(f"Search Results: {document_ids}")
-
-            return document_ids
-        else:
-            print(f"Search was raising HTTP error: {response.status_code}")
-
+        document_ids = _get_document_ids(
+            access_token,
+            base_url,
+            {"tags__id__all": ",".join(str(tag) for tag in tags)},
+        )
+        print(f"Search Results: {document_ids}")
+        return document_ids
     except Exception as e:
-        print(f"Error connecting to paperless-ngx, is it running? Error: {e}")
+        print(f"Error retrieving Paperless documents: {e}")
 
 
 def download_document(access_token, base_url, id):
