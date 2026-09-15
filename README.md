@@ -28,3 +28,19 @@ So feedback is welcome!
 
 ## Special thanks
 Thanks to the developers of paperless-ngx in the first place. You did and are doing a great job making it so easy to develop simple tools like this to interact with paperless-ngx!
+
+## Document searches
+
+Searches read document IDs from `results` and follow `next` until all pages are read.
+This also works with Paperless responses that do not contain the legacy `all` field.
+If a page fails, the search returns no IDs for that polling cycle.
+
+## Tests
+
+Install the dependencies from `source/requirements.txt`. Then run:
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+These tests use simulated API responses. They do not upload documents or change tags.
